@@ -1,0 +1,68 @@
+This version of go/types is part of the prototype that implements the
+extended Go language as outlined by the latest generics draft design.
+
+DISCLAIMER
+
+This code is based on the std/library's go/types package but it has
+been modified heavily. Please bear in mind that:
+
+- This is a prototype. Expect bugs, incomplete parts, and suboptimal
+  and (gulp) possibly ugly code.
+
+- While all the major aspects of the generics design draft have been
+  implemented, parts are missing, especially around the operations permitted
+  on operands of generic types. In such cases, the result is most often
+  an error reporting that a certain operation is not permitted even though
+  it should be according to the draft design.
+
+- As prototyping continues, expect refinement and possibly divergence
+  from the most recent draft design published.
+
+EXAMPLE CODE
+
+For tests and example code (with detailed comments) look for files
+with suffix .go2 in the testdata and examples subdirectories.
+
+(The suffix .go2 is solely to distinguish them from regular Go code and
+to prevent gofmt from touching them. We expect a proper implementation to
+keep using .go .)
+
+RUNNING THE TYPE-CHECKER
+
+The type-checker is automatically run as part of the go2go tool.
+To experiment with generic code, it is recommened to use that tool.
+
+But the type-checker can also be run stand-alone on source code if
+so desired. There are two primary ways:
+
+1) By building the gotype tool in this source directory:
+
+      go build gotype.go
+
+   and then running the resulting binary on some input files
+
+      ./gotype <package files>
+
+   (Make sure to use the correct go tool when building.)
+
+2) By using the type-checker's TestCheck test function which
+   accepts a list of user provided files:
+
+      go test -run Check$ -errlist -files <package files>
+
+   For instance:
+
+      go test -run Check$ -files examples/types.go2
+
+   TestCheck will match any type errors against ERROR comments
+   in the source files and complain about discrepancies.
+   To report the errors instead, use:
+
+      go test -run Check$ -errlist -files examples/types.go2
+
+   To see a trace of the type checker progress, use the -v flag:
+
+      go test -v -run Check$ -errlist -files examples/types.go2
+
+   (When playing with this code, sometimes go vet gets in the
+   way, so it can be helpful to also provide -vet off.)
