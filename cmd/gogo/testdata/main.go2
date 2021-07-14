@@ -3,11 +3,21 @@ package main
 import (
   "fmt"
   "time"
-  )
+)
 
 func main() {
-	gogo fmt.Println("vim-go","123")
-	gogo fmt.Println("vim-go2","321")
-	time.Sleep(time.Second)
+	gogo func(){
+		for i:=0;i<100;i++{
+		fmt.Println("vim-go","123")
+		time.Sleep(time.Second)
+		}
+	}()
+	gogo func(){
+		for i:=0;i<100;i++{
+		fmt.Println("vim-go2","321")
+		time.Sleep(time.Second)
+		}
+	}()
+	time.Sleep(100*time.Second)
 	return
 }
