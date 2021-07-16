@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"sync"
 	"time"
 	"unsafe"
 )
@@ -50,11 +51,7 @@ func Gogoschedule() {
 		// println("in gosave at schedule")
 		gogogo(&sched.gg0.Sched)
 	}
-	println("out of gosave at schedule")
-	// jump 过来会返回到原来的函数
-	// 这里会被编译器优化掉导致gosave的下一行不会跑到这里
-	// 导致函数不会返回回原来的函数
-	// 加上 noinline
+	// println("out of gosave at schedule")
 }
 
 func goexit() {
@@ -90,10 +87,12 @@ func loopghead() {
 
 var count int
 
+//go:noline
 func schedule() {
 	if gosave(&sched.gg0.Sched) {
-		println("gogoschedule")
-		// gosave 永远是 false，这个地方只能被 gogo 进来。
+		// println("gogoschedule")
+		// 返回为true，这个地方只能被 gogo 进来。
+		// 没有 noline 好像跳不到这里。
 		curgg := sched.curgg
 		switch curgg.status {
 		case _Grunnable:
@@ -106,6 +105,8 @@ func schedule() {
 			break
 		}
 	}
+	// gosave 的下一行汇编是一个cmp的指令
+	// gosave 在 c 里面永远是false难道会被优化掉变成没有CMP。
 	// println("schedule")
 	for count < 300 {
 		count++
@@ -134,10 +135,11 @@ var NextGoGoroutine *GoGoRoutine
 
 func gosave(gogobuf *GoGoBuf) bool
 
-func gogogo(gogobuf *GoGoBuf)
+func gogogo(gogobuf *GoGoBuf) bool
 
 // get a gogoroutine from the queue
 func ggget() (gg *GoGoRoutine) {
+	sched.lock.Lock()
 	gg = sched.gghead
 	if gg != nil {
 		sched.gghead = gg.schedlink
@@ -146,11 +148,13 @@ func ggget() (gg *GoGoRoutine) {
 		}
 		sched.ggwait--
 	}
+	sched.lock.Unlock()
 	return gg
 }
 
 // put a gogoroutine on the queue
 func ggput(gg *GoGoRoutine) {
+	sched.lock.Lock()
 	if sched.gghead == nil {
 		sched.gghead = gg
 	} else {
@@ -158,6 +162,7 @@ func ggput(gg *GoGoRoutine) {
 	}
 	sched.ggtail = gg
 	sched.ggwait++
+	sched.lock.Unlock()
 	return
 }
 
@@ -181,6 +186,7 @@ var sched struct {
 	gg0   *GoGoRoutine
 	curgg *GoGoRoutine
 
+	lock   sync.Mutex
 	gghead *GoGoRoutine
 	ggtail *GoGoRoutine
 	ggwait int

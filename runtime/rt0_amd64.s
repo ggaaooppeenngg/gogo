@@ -6,12 +6,12 @@
 #define NOSPLIT 4
 #define SYS_mmap                9
 
-TEXT ·gogogo(SB), NOSPLIT, $0-8
+TEXT ·gogogo(SB), NOSPLIT, $0-16
 	MOVQ	8(SP), AX		// gogobuf
 	MOVQ	0(AX), SP		// restore SP
 	MOVQ	8(AX), AX
 	MOVQ	AX, 0(SP)		// put PC on the stack
-	MOVL	$1, AX			// return 1
+	MOVL	$1, 16(SP)              // return true
 	RET
 
 
