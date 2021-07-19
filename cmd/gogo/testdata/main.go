@@ -11,20 +11,22 @@ import (
 //go:noline
 func f1() {
 	println("proc 1 run")
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1; i++ {
 		println("vim-go", "123")
 		runtime.Gogoschedule()
 	}
+	println("proc 1 exit")
 }
 
 //go:nosplit
 //go:noline
 func f2() {
 	println("proc 2 run")
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1; i++ {
 		println("vim-go2", "321")
 		runtime.Gogoschedule()
 	}
+	println("proc 2 exit")
 }
 func main() {
 	runtime.NewProc(f1)

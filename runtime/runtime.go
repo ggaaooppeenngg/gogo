@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"os"
 	"sync"
 	"time"
 	"unsafe"
@@ -57,6 +58,7 @@ func Gogoschedule() {
 func goexit() {
 	sched.curgg.status = _Gdead
 	//TODO: free stack memory
+	println("goid", sched.curgg.goid, "exit")
 	Gogoschedule()
 }
 
@@ -72,6 +74,7 @@ func NewProc(f interface{}, args ...interface{}) {
 	gogoRoutine.Sched.SP = sp - 8 - 8
 	gogoRoutine.Stack = stack
 	globalgoid++
+	sched.gcount++
 	gogoRoutine.goid = globalgoid
 	gogoRoutine.status = _Grunnable
 	ggput(&gogoRoutine)
@@ -102,6 +105,10 @@ func schedule() {
 			ggput(curgg)
 			break
 		case _Gdead:
+			sched.gcount--
+			if sched.gcount == 0 {
+				os.Exit(0)
+			}
 			break
 		}
 	}
@@ -188,6 +195,7 @@ var sched struct {
 
 	lock   sync.Mutex
 	gghead *GoGoRoutine
+	gcount int
 	ggtail *GoGoRoutine
 	ggwait int
 }
